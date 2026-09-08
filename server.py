@@ -27,8 +27,8 @@ def fetch_naver_cctv(channel_id):
 def fetch_fresh_cctv_data():
     result = []
     
-    # [1] 성남삼평교 (ID: 2356)
-    sp1_url = fetch_naver_cctv(2356)
+    # [1] 성남삼평교 (ID: 538)
+    sp1_url = fetch_naver_cctv(538)
     if sp1_url:
         result.append({
             "name": "[수도권제1순환선] 성남삼평교",
