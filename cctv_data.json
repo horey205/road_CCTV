@@ -1,0 +1,28 @@
+{
+  "cctvs": [
+    {
+      "name": "[수도권제1순환] 성남삼평교",
+      "url": "https://cctvsecn01.ktict.co.kr/538/NOblCzbOsD-VMxonJUf_oxEqA3NaVHQXSqMws5wUwqfeCqwDQGaQQefLYbodMj3M",
+      "dir": "판교 ↔ 구리/퇴계원 방면",
+      "isPriority": true
+    },
+    {
+      "name": "[수도권제1순환] 판교분기점",
+      "url": "https://cctvsecn01.ktict.co.kr/1/Q2_NzYz13RBHJHfwzwNNEdij9ve8yFFKh6jy8sNf64PsvC3hpGWZc3F52ZuZ6oiB",
+      "dir": "경부선 환승 분기점",
+      "isPriority": true
+    },
+    {
+      "name": "[경수대로] 골사그네",
+      "url": "https://cctvsecn01.ktict.co.kr/6663/DpCC_ssEoNkJigZkuMDfXW-g2riDNOCLmB9iz99ryOxdVirjxTcT0G-aKCuvuKxw",
+      "dir": "수원 ↔ 안양/의왕 경수대로",
+      "isPriority": false
+    },
+    {
+      "name": "[과천봉담선] 월암IC",
+      "url": "https://cctvsecn01.ktict.co.kr/1597/ab8lTypZKYJuEhidnRbPIy8TMgPqCsVDLH8YR--DfKg8K4OIkyDUY4f8FQkdxC3-",
+      "dir": "봉담 ↔ 과천 도시고속화도로",
+      "isPriority": false
+    }
+  ]
+}

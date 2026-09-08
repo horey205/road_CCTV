@@ -279,7 +279,7 @@
     let cachedCCTVs = [];
 
     async function fetchCCTVList() {
-      // 1. 로컬 파이썬 서버 API
+      // 1. 로컬 파이썬 서버 API (/api/cctv)
       try {
         const res = await fetch('/api/cctv?t=' + Date.now());
         if (res.ok) {
@@ -289,24 +289,21 @@
             return data.cctvs;
           }
         }
-      } catch (e) {
-        console.warn("로컬 API 실패, 직접 호출 시도:", e);
-      }
+      } catch (e) {}
 
-      // 2. Fallback: ITS 직접 조회
-      const API_KEY = "70ef9b6e0cb84142ab92089ce2a448ff";
-      const minX = 127.05, maxX = 127.20, minY = 37.35, maxY = 37.48;
-      const url = `https://openapi.its.go.kr:9443/cctvInfo?apiKey=${API_KEY}&type=ex&cctvType=1&minX=${minX}&maxX=${maxX}&minY=${minY}&maxY=${maxY}&getType=json`;
-      const directRes = await fetch(url);
-      const directData = await directRes.json();
-      const list = (directData?.response?.data || []).map(item => ({
-        name: item.cctvname,
-        url: item.cctvurl,
-        coord: `${item.coordx}, ${item.coordy}`,
-        isPriority: item.cctvname.includes('삼평교')
-      }));
-      cachedCCTVs = list;
-      return list;
+      // 2. GitHub Pages용 정적 데이터 (cctv_data.json)
+      try {
+        const staticRes = await fetch('cctv_data.json?t=' + Date.now());
+        if (staticRes.ok) {
+          const staticData = await staticRes.json();
+          if (staticData.cctvs && staticData.cctvs.length > 0) {
+            cachedCCTVs = staticData.cctvs;
+            return staticData.cctvs;
+          }
+        }
+      } catch (e) {}
+
+      return [];
     }
 
     async function reloadSingleCCTV(index, id, targetName) {
