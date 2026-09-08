@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>출근길 도로 CCTV (성남삼평교)</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #131c2e;
+      --card-border: #22324e;
+      --accent: #38bdf8;
+      --badge-hot: #ef4444;
+      --text-main: #f1f5f9;
+      --text-sub: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Pretendard', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 30px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(9, 13, 22, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand h1 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .live-tag {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 99px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--badge-hot);
+      border-radius: 50%;
+      animation: pulse 1.4s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .btn-refresh {
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-refresh:active {
+      background: #334155;
+    }
+
+    main {
+      flex: 1;
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Grid for 4 CCTVs */
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 640px) {
+      .grid-container {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .cctv-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    /* 삼평교 2개 강조 */
+    .cctv-card.priority {
+      border: 1.5px solid #0284c7;
+      box-shadow: 0 4px 20px rgba(56, 189, 248, 0.18);
+    }
+
+    .cctv-card.priority .card-header {
+      background: linear-gradient(90deg, rgba(14, 116, 144, 0.35), transparent);
+    }
+
+    .card-header {
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .card-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .badge-star {
+      background: #f59e0b;
+      color: #0f172a;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .video-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .overlay-state {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-sub);
+      font-size: 0.85rem;
+      z-index: 10;
+      transition: opacity 0.2s;
+    }
+    .overlay-state.hidden {
+      display: none;
+    }
+
+    .spinner {
+      width: 26px;
+      height: 26px;
+      border: 3px solid rgba(56, 189, 248, 0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .card-footer {
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .meta-direction {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+    }
+
+    .action-btn {
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .action-btn:active {
+      background: #334155;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <h1>🚗 출근길 CCTV</h1>
+      <span class="live-tag"><span class="dot"></span>실시간</span>
+    </div>
+    <button class="btn-refresh" onclick="loadAllFeeds()">
+      🔄 새로고침
+    </button>
+  </header>
+
+  <main>
+    <div class="grid-container" id="cctvGrid">
+      <div style="grid-column:1/-1; text-align:center; padding: 40px; color: var(--text-sub);">
+        CCTV 목록을 불러오는 중입니다...
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const hlsMap = {};
+    let cachedCCTVs = [];
+
+    async function fetchCCTVList() {
+      // 1. 로컬 파이썬 서버 API
+      try {
+        const res = await fetch('/api/cctv?t=' + Date.now());
+        if (res.ok) {
+          const data = await res.json();
+          if (data.cctvs && data.cctvs.length > 0) {
+            cachedCCTVs = data.cctvs;
+            return data.cctvs;
+          }
+        }
+      } catch (e) {
+        console.warn("로컬 API 실패, 직접 호출 시도:", e);
+      }
+
+      // 2. Fallback: ITS 직접 조회
+      const API_KEY = "70ef9b6e0cb84142ab92089ce2a448ff";
+      const minX = 127.05, maxX = 127.20, minY = 37.35, maxY = 37.48;
+      const url = `https://openapi.its.go.kr:9443/cctvInfo?apiKey=${API_KEY}&type=ex&cctvType=1&minX=${minX}&maxX=${maxX}&minY=${minY}&maxY=${maxY}&getType=json`;
+      const directRes = await fetch(url);
+      const directData = await directRes.json();
+      const list = (directData?.response?.data || []).map(item => ({
+        name: item.cctvname,
+        url: item.cctvurl,
+        coord: `${item.coordx}, ${item.coordy}`,
+        isPriority: item.cctvname.includes('삼평교')
+      }));
+      cachedCCTVs = list;
+      return list;
+    }
+
+    async function reloadSingleCCTV(index, id, targetName) {
+      const overlay = document.getElementById(`over-${id}`);
+      const txt = document.getElementById(`txt-${id}`);
+      if (overlay) overlay.classList.remove("hidden");
+      if (txt) txt.innerText = "새 스트림 발급 중...";
+
+      try {
+        const freshList = await fetchCCTVList();
+        let target = freshList.find(c => c.name === targetName) || freshList[index];
+        if (target && target.url) {
+          startStream(id, target.url, targetName, index);
+        } else {
+          if (txt) txt.innerText = "스트림 갱신 실패 (재시도 클릭)";
+        }
+      } catch (e) {
+        if (txt) txt.innerText = "연결 오류 (재시도 클릭)";
+      }
+    }
+
+    async function loadAllFeeds() {
+      const grid = document.getElementById("cctvGrid");
+      const btn = document.querySelector(".btn-refresh");
+      if (btn) btn.innerText = "⏳ 갱신 중...";
+
+      try {
+        const list = await fetchCCTVList();
+        if (!list || list.length === 0) {
+          grid.innerHTML = '<div style="color:#f87171; text-align:center; grid-column:1/-1; padding:40px;">CCTV 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>';
+          return;
+        }
+
+        // 삼평교가 가장 위로 오도록 정렬
+        list.sort((a, b) => {
+          if (a.isPriority && !b.isPriority) return -1;
+          if (!a.isPriority && b.isPriority) return 1;
+          return 0;
+        });
+
+        grid.innerHTML = "";
+        list.slice(0, 4).forEach((item, index) => {
+          const id = `cctv-${index}`;
+          const isSamPyeong = item.isPriority;
+
+          const card = document.createElement("div");
+          card.className = `cctv-card ${isSamPyeong ? 'priority' : ''}`;
+          card.innerHTML = `
+            <div class="card-header">
+              <div class="card-title-wrap">
+                ${isSamPyeong ? '<span class="badge-star">★중점</span>' : ''}
+                <span class="card-title">${item.name}</span>
+              </div>
+              <button class="action-btn" onclick="reloadSingleCCTV(${index}, '${id}', '${item.name}')">↻ 재연결</button>
+            </div>
+            <div class="video-box" onclick="reloadSingleCCTV(${index}, '${id}', '${item.name}')" style="cursor: pointer;">
+              <video id="vid-${id}" playsinline muted autoplay></video>
+              <div class="overlay-state" id="over-${id}">
+                <div class="spinner"></div>
+                <span id="txt-${id}">스트림 연결 중...</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="meta-direction">${item.dir || item.coord || '수도권제1순환선'}</span>
+              <button class="action-btn" onclick="toggleFullScreen('vid-${id}')">⛶ 전체화면</button>
+            </div>
+          `;
+          grid.appendChild(card);
+
+          startStream(id, item.url, item.name, index);
+        });
+
+      } catch (err) {
+        console.error(err);
+        grid.innerHTML = `<div style="color:#f87171; text-align:center; grid-column:1/-1; padding:40px;">에러 발생: ${err.message}</div>`;
+      } finally {
+        if (btn) btn.innerText = "🔄 새로고침";
+      }
+    }
+
+    function startStream(id, url, name, index) {
+      const video = document.getElementById(`vid-${id}`);
+      const overlay = document.getElementById(`over-${id}`);
+      const txt = document.getElementById(`txt-${id}`);
+      if (!video) return;
+
+      if (overlay) overlay.classList.remove("hidden");
+      if (txt) txt.innerText = "영상 버퍼링 중...";
+
+      if (hlsMap[id]) {
+        try {
+          hlsMap[id].destroy();
+        } catch(e) {}
+        delete hlsMap[id];
+      }
+
+      const onPlaySuccess = () => {
+        if (overlay) overlay.classList.add("hidden");
+      };
+
+      // iOS Safari 네이티브 HLS
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.onloadedmetadata = () => {
+          video.play().then(onPlaySuccess).catch(e => console.log(e));
+        };
+        video.onerror = () => {
+          if (txt) txt.innerText = "만료됨 (화면 탭하여 새로고침)";
+        };
+      }
+      // Chrome / Desktop / Android Hls.js
+      else if (Hls.isSupported()) {
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+          manifestLoadingTimeOut: 15000,
+          manifestLoadingMaxRetry: 3,
+          levelLoadingMaxRetry: 3
+        });
+        hlsMap[id] = hls;
+
+        hls.loadSource(url);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play().then(onPlaySuccess).catch(e => {
+            console.log("Autoplay blocked or waiting:", e);
+          });
+        });
+
+        hls.on(Hls.Events.FRAG_LOADED, () => {
+          if (overlay) overlay.classList.add("hidden");
+        });
+
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            console.warn(`[${id}] HLS Fatal Error:`, data.type, data.details);
+            if (data.response && (data.response.code === 403 || data.response.code === 404)) {
+              if (txt) txt.innerText = "세션 만료됨 (클릭 시 자동 재연결)";
+            } else {
+              // 치명적이지 않은 에러는 재시도 시도
+              switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR:
+                  console.log("Network error, trying to recover...");
+                  hls.startLoad();
+                  break;
+                case Hls.ErrorTypes.MEDIA_ERROR:
+                  console.log("Media error, trying to recover...");
+                  hls.recoverMediaError();
+                  break;
+                default:
+                  if (txt) txt.innerText = "만료됨 (화면 탭하여 새로고침)";
+                  break;
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function toggleFullScreen(vidId) {
+      const vid = document.getElementById(vidId);
+      if (!vid) return;
+      if (vid.requestFullscreen) {
+        vid.requestFullscreen();
+      } else if (vid.webkitEnterFullscreen) {
+        vid.webkitEnterFullscreen();
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadAllFeeds();
+    });
+  </script>
+</body>
+</html>
