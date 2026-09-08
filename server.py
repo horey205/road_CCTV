@@ -27,38 +27,25 @@ def fetch_naver_cctv(channel_id):
 def fetch_fresh_cctv_data():
     result = []
     
-    # 1. 국가교통정보센터 (ITS): 성남삼평교 1 & 2
-    minX, maxX, minY, maxY = 127.05, 127.20, 37.35, 37.48
-    url = f"https://openapi.its.go.kr:9443/cctvInfo?apiKey={API_KEY}&type=ex&cctvType=1&minX={minX}&maxX={maxX}&minY={minY}&maxY={maxY}&getType=json"
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    try:
-        with urllib.request.urlopen(req, timeout=8) as res:
-            data = json.loads(res.read().decode('utf-8'))
-            items = data.get('response', {}).get('data', [])
-            
-            # [1] 성남삼평교
-            c1 = next((i for i in items if i.get('cctvname') == "[수도권제1순환선] 성남삼평교" or i.get('cctvname', '').endswith('성남삼평교')), None)
-            if not c1:
-                c1 = next((i for i in items if '삼평교' in i.get('cctvname', '') and '2' not in i.get('cctvname', '')), None)
-            if c1:
-                result.append({
-                    "name": "[수도권제1순환선] 성남삼평교",
-                    "url": c1.get('cctvurl'),
-                    "dir": "판교 ↔ 구리/퇴계원 방면",
-                    "isPriority": True
-                })
+    # [1] 성남삼평교 (ID: 2356)
+    sp1_url = fetch_naver_cctv(2356)
+    if sp1_url:
+        result.append({
+            "name": "[수도권제1순환선] 성남삼평교",
+            "url": sp1_url,
+            "dir": "판교 ↔ 구리/퇴계원 방면",
+            "isPriority": True
+        })
 
-            # [2] 성남삼평교2
-            c2 = next((i for i in items if "삼평교2" in i.get('cctvname', '')), None)
-            if c2:
-                result.append({
-                    "name": "[수도권제1순환선] 성남삼평교2",
-                    "url": c2.get('cctvurl'),
-                    "dir": "성남 ↔ 일산/판교 방면",
-                    "isPriority": True
-                })
-    except Exception as e:
-        print(f"Error fetching ITS API: {e}")
+    # [2] 판교분기점 (ID: 1)
+    pangyo_url = fetch_naver_cctv(1)
+    if pangyo_url:
+        result.append({
+            "name": "[수도권제1순환선] 판교분기점",
+            "url": pangyo_url,
+            "dir": "경부선 환승 분기점",
+            "isPriority": True
+        })
 
     # [3] 네이버 지도 실시간 API: 경수대로 (골사그네, ID: 6663)
     gyeongsu_url = fetch_naver_cctv(6663)
