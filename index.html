@@ -278,8 +278,22 @@
     const hlsMap = {};
     let cachedCCTVs = [];
 
+    const WORKER_API = "https://road-cctv-proxy-2597.horey205.workers.dev/api/cctv";
+
     async function fetchCCTVList() {
-      // 1. 로컬 파이썬 서버 API (/api/cctv)
+      // 1. Cloudflare Worker 프록시 API (GitHub Pages 및 모바일 전용 실시간)
+      try {
+        const res = await fetch(`${WORKER_API}?t=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.cctvs && data.cctvs.length > 0) {
+            cachedCCTVs = data.cctvs;
+            return data.cctvs;
+          }
+        }
+      } catch (e) {}
+
+      // 2. 로컬 파이썬 서버 API (/api/cctv)
       try {
         const res = await fetch('/api/cctv?t=' + Date.now());
         if (res.ok) {
@@ -291,7 +305,7 @@
         }
       } catch (e) {}
 
-      // 2. GitHub Pages용 정적 데이터 (cctv_data.json)
+      // 3. GitHub Pages용 정적 폴백 데이터 (cctv_data.json)
       try {
         const staticRes = await fetch('cctv_data.json?t=' + Date.now());
         if (staticRes.ok) {

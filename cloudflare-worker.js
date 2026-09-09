@@ -18,38 +18,7 @@ export default {
       const API_KEY = "70ef9b6e0cb84142ab92089ce2a448ff";
       const result = [];
 
-      // 1. ITS API (성남삼평교 1 & 2)
-      try {
-        const minX = 127.05, maxX = 127.20, minY = 37.35, maxY = 37.48;
-        const itsUrl = `https://openapi.its.go.kr:9443/cctvInfo?apiKey=${API_KEY}&type=ex&cctvType=1&minX=${minX}&maxX=${maxX}&minY=${minY}&maxY=${maxY}&getType=json`;
-        const itsRes = await fetch(itsUrl, { headers: { "User-Agent": "Mozilla/5.0" } });
-        if (itsRes.ok) {
-          const itsData = await itsRes.json();
-          const items = itsData?.response?.data || [];
-
-          const c1 = items.find(i => i.cctvname === "[수도권제1순환선] 성남삼평교" || i.cctvname.endsWith("성남삼평교") || (i.cctvname.includes("삼평교") && !i.cctvname.includes("2")));
-          if (c1) {
-            result.push({
-              name: "[수도권제1순환선] 성남삼평교",
-              url: c1.cctvurl,
-              dir: "판교 ↔ 구리/퇴계원 방면",
-              isPriority: true
-            });
-          }
-
-          const c2 = items.find(i => i.cctvname.includes("삼평교2"));
-          if (c2) {
-            result.push({
-              name: "[수도권제1순환선] 성남삼평교2",
-              url: c2.cctvurl,
-              dir: "성남 ↔ 일산/판교 방면",
-              isPriority: true
-            });
-          }
-        }
-      } catch (e) {}
-
-      // 2. 네이버 지도 CCTV API 함수
+      // 네이버 지도 CCTV API 함수
       async function fetchNaverCctv(id) {
         try {
           const nRes = await fetch(`https://map.naver.com/p/api/cctv?cctvId=${id}`, {
@@ -67,6 +36,29 @@ export default {
         } catch (e) {}
         return null;
       }
+
+      // [1] 성남삼평교 (ID: 538)
+      const sp = await fetchNaverCctv(538);
+      if (sp) {
+        result.push({
+          name: "[수도권제1순환선] 성남삼평교",
+          url: sp,
+          dir: "판교 ↔ 구리/퇴계원 방면",
+          isPriority: true
+        });
+      }
+
+      // [2] 판교분기점 (ID: 1)
+      const pangyo = await fetchNaverCctv(1);
+      if (pangyo) {
+        result.push({
+          name: "[수도권제1순환선] 판교분기점",
+          url: pangyo,
+          dir: "경부선 환승 분기점",
+          isPriority: true
+        });
+      }
+
 
       // [3] 경수대로 (골사그네 ID: 6663)
       const gyeongsu = await fetchNaverCctv(6663);
